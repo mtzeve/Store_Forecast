@@ -156,7 +156,7 @@ df_p1 = performance_metrics(df_cv)
 df_p1['horizon'] = df_p1['horizon'].astype(str)
 
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     rmse = round(df_p1['rmse'].mean(),2)
@@ -164,14 +164,17 @@ with col1:
 with col2:
     mean_mdape = round(df_p1['mdape'].mean(),2)
     st.metric(label="mdape", value=mean_mdape)
-
+with col3:
+    mmean_coverage = round(df_p1['coverage'].mean(),2)
+    st.metric(label="coverage", value=mmean_coverage)
+    
 with st.expander("See explanation"):
      st.write("RMSE of: {}".format(rmse), "would mean, on average, the model's predictions are off by approximately: {}".format(rmse), "units of sales.")
      st.write("MdAPE at: {}".format(mean_mdape), "signifies that half of the model's predictions for that time horizon deviate by less than: {}".format(mean_mdape*100), "% from the actual sales")
 
 #col1, col2 = st.columns(2)
 #with col1:
-col1, col2 = st.columns([1, 1])  # Equal width for both columns
+col1, col2, col3 = st.columns([1, 1, 1])  # Equal width for both columns
 
 with col1:
     rmse_chart = px.bar(df_p1, x='horizon', y='rmse', labels={'horizon': 'Horizon', 'rmse': 'RMSE'}, title='RMSE by Horizon')
@@ -181,4 +184,9 @@ with col2:
     mdape_chart = px.bar(df_p1, x='horizon', y='mdape', labels={'horizon': 'Horizon', 'mdape': 'MDAPE'}, title='MDAPE by Horizon')
     mdape_chart.update_traces(marker_color='#ff4b4b')
     st.plotly_chart(mdape_chart, use_container_width=True)  # Adjust chart width to match column width
+
+with col3:
+    coverage_chart = px.bar(df_p1, x='horizon', y='coverage', labels={'horizon': 'Horizon', 'coverage': 'COVERAGE'}, title='COVERAGE by Horizon')
+    coverage_chart.update_traces(marker_color='#4BFF4B')
+    st.plotly_chart(coverage_chart, use_container_width=True)
 
