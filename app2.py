@@ -134,16 +134,16 @@ forecast = m.predict(future)
 
 #whole model
 st.title('Sales Forecast :chart_with_upwards_trend:')
-st.markdown('Here is an interactive Plotly plot showcasing the forecasted values produced by the Prophet model. Utilizing the model instance (m) and the forecasted DataFrame (forecast) as inputs, this dynamic visualization allows users to explore and analyze the predicted trends in an interactive and engaging manner.')
+st.markdown("Overview: The app uses past sales information from Corporacion Favorita's grocery stores in addition to the user's input for Product Family, Store Number, and quantity of future promotional items to forecast future sales for the product family and store.")
 
 st.plotly_chart(plot_plotly(m, forecast),use_container_width=True)
 #forecast components
 st.title('Forecast components')
 with st.expander("See explanation"):
      st.write('Trend: The trend component represents the overall direction of the time series. It can show the general upward or downward movement in sales over time.')
-     st.write('Seasonality (Monthly): The monthly seasonality component captures recurring patterns with a period of approximately one month (30.5 days). The Fourier terms control the shape and complexity of this seasonal pattern.')
+     st.write('Seasonality: The seasonality component (Monthly and Yearly) captures recurring patterns.')
      st.write('Holidays: This component visualizes the impact of holidays on the time series.')
-     st.write('Onpromotion Regressor: This component illustrates how the onpromotion variable influences the time series in a proportional (multiplicative) manner')
+     
 
 
 st.plotly_chart(plot_components_plotly(m, forecast),use_container_width=True)
@@ -165,12 +165,13 @@ with col2:
     mean_mdape = round(df_p1['mdape'].mean(),2)
     st.metric(label="mdape", value=mean_mdape)
 with col3:
-    mmean_coverage = round(df_p1['coverage'].mean(),2)
-    st.metric(label="coverage", value=mmean_coverage)
+    mean_coverage = round(df_p1['coverage'].mean(),2)
+    st.metric(label="coverage", value=mean_coverage)
     
 with st.expander("See explanation"):
      st.write("RMSE of: {}".format(rmse), "would mean, on average, the model's predictions are off by approximately: {}".format(rmse), "units of sales.")
      st.write("MdAPE at: {}".format(mean_mdape), "signifies that half of the model's predictions for that time horizon deviate by less than: {}".format(mean_mdape*100), "% from the actual sales")
+     st.write("A coverage of: {}".format(mean_coverage*100), "% would mean that, on average, the forecasting model accurately predicts approximately: {}".format(mean_coverage), "out of 100 sales units within the defined confidence interval. The default confidence interval for the Prophet model is 80%")
 
 #col1, col2 = st.columns(2)
 #with col1:
@@ -189,4 +190,5 @@ with col3:
     coverage_chart = px.bar(df_p1, x='horizon', y='coverage', labels={'horizon': 'Horizon', 'coverage': 'COVERAGE'}, title='COVERAGE by Horizon')
     coverage_chart.update_traces(marker_color='#4BFF4B')
     st.plotly_chart(coverage_chart, use_container_width=True)
+st.markdown("These graphs demonstrate how the model prediction performs in the future with regard to the evaluation metrics!")
 
