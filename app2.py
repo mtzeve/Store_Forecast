@@ -39,7 +39,7 @@ st.image(logo_url, width=400)
 @st.cache_data
 def load_train_data():
 
-    file_path = 'E:\BDS\Sales_forecast\\train.csv'
+    file_path = 'https://media.githubusercontent.com/media/mtzeve/Store_Forecast/main/train.csv'
 
     train_df = pd.read_csv(file_path)
     
@@ -65,7 +65,7 @@ filtered_train = train_df[(train_df['family'] == selected_family) & (train_df['s
 #load and clean holiday data
 @st.cache_data
 def load_holiday_data():
-    file_path = 'E:\BDS\Sales_forecast\holidays_events.csv'
+    file_path = 'https://raw.githubusercontent.com/mtzeve/Store_Forecast/main/holidays_events.csv'
     hol_df = pd.read_csv(file_path)
     hol_df["date"] = pd.to_datetime(hol_df.date)
     tr1 = hol_df[(hol_df.type == "Holiday") & (hol_df.transferred == True)].drop("transferred", axis = 1).reset_index(drop = True)
