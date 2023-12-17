@@ -91,38 +91,6 @@ df = filtered_train.groupby(['date'])[['sales','onpromotion']].sum().reset_index
 
 df.rename(columns={"date": "ds", "sales": "y"}, inplace = True)
 
-
-
-#def tuning():
-#    param_grid = {
-#    # tuning those parameters can potentially improve the performance of our model
-#    'changepoint_prior_scale': [0.001, 0.1],
-#    #'seasonality_prior_scale': [0.01, 1.0],
-#    #'holidays_prior_scale': [0.01, 0.1],
-#    'seasonality_mode': ['additive', 'multiplicative'],
-#    }
-#
-## Generate all combinations of parameters
-#    all_params = [dict(zip(param_grid.keys(), v)) for v in itertools.product(*param_grid.values())]
-#    rmses = []
-#    all_params
-#    for params in all_params:
-#        m = Prophet(**params).fit(df)
-#        df_cv = cross_validation(m, initial = '365.5 days', period = '30 days', horizon='30 days')
-#        df_p = performance_metrics(df_cv, rolling_window=1)
-#        rmses.append(df_p['rmse'].values[0])
-#
-#    # Find the best parameters
-#    tuning_results = pd.DataFrame(all_params)
-#    tuning_results['rmse'] = rmses
-#
-#    best_params = all_params[np.argmin(rmses)]
-#    return best_params
-#best_params = tuning()
-#best_params_df = pd.DataFrame([best_params])
-#cp_prior_scale = best_params_df['changepoint_prior_scale'].iloc[0]
-#season_mo = best_params_df['seasonality_mode'].iloc[0]
-
 m = Prophet(holidays=hol_df,weekly_seasonality=False,changepoint_prior_scale=0.1,seasonality_mode='multiplicative')
 m.add_seasonality(name='monthly', period=30.5, fourier_order=5, prior_scale=15)
 m.add_regressor('onpromotion')
@@ -132,9 +100,67 @@ no_of_promotions = st.sidebar.slider("Pick number of promotional items", 0, 100)
 future['onpromotion'] = no_of_promotions
 forecast = m.predict(future)
 
+prediction = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+prediction['ds'] = pd.to_datetime(prediction['ds'])
+
+# Group by month and sum the columns
+prediction_grouped = prediction.groupby(prediction['ds'].dt.to_period('M')).agg({
+    'yhat': 'sum',
+    'yhat_lower': 'sum',
+    'yhat_upper': 'sum'
+}).reset_index()
+ # Full month name
+df['ds'] = pd.to_datetime(df['ds'])
+df_monthly = df.groupby(prediction['ds'].dt.to_period('M')).agg({
+    'y': 'sum'
+}).reset_index()
+
+prediction_grouped['month_name'] = prediction_grouped['ds'].dt.strftime('%B %Y') 
+df_monthly['month_name'] = df_monthly['ds'].dt.strftime('%B %Y') 
+
+latest_month = df['ds'].max().strftime('%Y-%m')
+previous_months = df_monthly[df_monthly['ds'] < latest_month]
+future_months = prediction_grouped[prediction_grouped['ds'] >= latest_month]
+
+L1_month_name = previous_months.iloc[-1]['month_name']
+L1_yhat_value = previous_months.iloc[-1]['y']
+L2_month_name = previous_months.iloc[-2]['month_name']
+L2_yhat_value = previous_months.iloc[-2]['y']
+L3_month_name = previous_months.iloc[-3]['month_name']
+L3_yhat_value = previous_months.iloc[-3]['y']
+
+F1_month_name = future_months.iloc[1]['month_name']
+F1_yhat_value = future_months.iloc[1]['yhat']
+F2_month_name = future_months.iloc[2]['month_name']
+F2_yhat_value = future_months.iloc[2]['yhat']
+F3_month_name = future_months.iloc[3]['month_name']
+F3_yhat_value = future_months.iloc[3]['yhat']
+
 #whole model
 st.title('Sales Forecast :chart_with_upwards_trend:')
 st.markdown("Overview: The app uses past sales information from Corporacion Favorita's grocery stores in addition to the user's input for Product Family, Store Number, and quantity of future promotional items to forecast future sales for the product family and store.")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Last 3 months")
+    col1_last, col2_last, col3_last = st.columns(3)
+    with col1_last:
+        st.metric(label=L3_month_name, value=round(L3_yhat_value))
+    with col2_last:
+        st.metric(label=L2_month_name, value=round(L2_yhat_value))
+    with col3_last:
+        st.metric(label=L1_month_name, value=round(L1_yhat_value))
+
+with col2:
+    st.subheader("Next 3 months")
+    col1_next, col2_next, col3_next = st.columns(3)
+    with col1_next:
+        st.metric(label=F1_month_name, value=round(F1_yhat_value))
+    with col2_next:
+        st.metric(label=F2_month_name, value=round(F2_yhat_value))
+    with col3_next:
+        st.metric(label=F3_month_name, value=round(F3_yhat_value))
 
 st.plotly_chart(plot_plotly(m, forecast),use_container_width=True)
 #forecast components
